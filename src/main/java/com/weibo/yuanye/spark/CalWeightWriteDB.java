@@ -8,6 +8,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.VoidFunction;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -82,12 +83,20 @@ class DbOperateFunction implements VoidFunction<Iterator<String>> {
     public void call(Iterator<String> iter) throws Exception {
         if (!host.equals("")) {
             Jedis conn = new Jedis(host, Integer.parseInt(port));
+            Pipeline p =  conn.pipelined();
             conn.auth(password);
+            //每次批量写入10万条
+            int COUNT = 100000;
+            int count = 0;
             while (iter.hasNext()) {
                 String in = iter.next();
                 String[] splits = in.split("\t");
-                conn.set(splits[0], splits[1]);
+                p.set(splits[0], splits[1]);
+                if (count == COUNT) {
+                    p.sync();
+                }
             }
+            p.sync();
         } else {
             Connection conn = null;
             PreparedStatement pst = null;
