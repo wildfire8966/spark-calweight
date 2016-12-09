@@ -35,6 +35,8 @@ public class CalWeightWriteDB {
         String outputpath = args[3];
 
         SparkConf sc = new SparkConf();
+        sc.set("spark.eventLog.enabled", "true");
+        sc.set("spark.eventLog.dir", "hdfs://ns1/user/weibo_bigdata_dm/yuanye8/test/spark-log");
         JavaSparkContext jsc = new JavaSparkContext(sc);
 
         jsc.addFile(treeModelPath);
